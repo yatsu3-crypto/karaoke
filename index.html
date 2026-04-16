@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ファンファーレ 練習アプリ｜玉置浩二</title>
+<title>玉置浩二 カラオケ練習アプリ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Orbitron:wght@400;700;900&display=swap');
 
@@ -644,7 +644,114 @@
     margin-bottom: 8px;
   }
 
-  @media (max-width: 480px) {
+
+  /* Song selector */
+  .song-selector {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .song-select {
+    flex: 1;
+    min-width: 180px;
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .song-select:focus { border-color: var(--accent2); }
+
+  .song-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .song-meta strong { color: var(--accent2); }
+
+  /* Add song modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 28px;
+    width: 100%;
+    max-width: 500px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 18px;
+    color: var(--accent2);
+  }
+
+  .form-row {
+    margin-bottom: 14px;
+  }
+
+  .form-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus { border-color: var(--accent2); }
+
+  .form-input-lyrics {
+    min-height: 160px;
+    resize: vertical;
+  }
+
+  .form-row-half {
+    display: flex;
+    gap: 10px;
+  }
+
+  .form-row-half .form-row { flex: 1; }
+
+@media (max-width: 480px) {
     .score-breakdown { grid-template-columns: 1fr; }
     .bpm-number { font-size: 2.5rem; }
     .beat-light { width: 40px; height: 40px; }
@@ -654,8 +761,57 @@
 <body>
 <div class="container">
   <header>
-    <h1>ファンファーレ 練習<span>玉置浩二 ｜ KARAOKE TRAINER</span></h1>
+    <h1>玉置浩二 練習<span>KARAOKE TRAINER</span></h1>
   </header>
+
+  <!-- SONG SELECTOR -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">🎵 練習曲を選ぶ</div>
+    <div class="song-selector">
+      <select class="song-select" id="song-select" onchange="selectSong(this.value)">
+      </select>
+      <button class="btn btn-teal" style="padding:10px 18px; font-size:0.85rem;" onclick="openAddSong()">＋ 曲を追加</button>
+      <button class="btn btn-secondary" style="padding:10px 14px; font-size:0.85rem;" id="btn-delete-song" onclick="deleteSong()">🗑</button>
+    </div>
+    <div class="song-meta" id="song-meta-display"></div>
+  </div>
+
+  <!-- ADD SONG MODAL -->
+  <div class="modal-overlay" id="modal-add">
+    <div class="modal">
+      <div class="modal-title">＋ 新しい曲を追加</div>
+      <div class="form-row">
+        <label class="form-label">曲名 *</label>
+        <input class="form-input" id="new-title" placeholder="例：メロディー" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">アーティスト</label>
+        <input class="form-input" id="new-artist" placeholder="例：玉置浩二" value="玉置浩二" />
+      </div>
+      <div class="form-row-half">
+        <div class="form-row">
+          <label class="form-label">BPM</label>
+          <input class="form-input" id="new-bpm" type="number" placeholder="例：92" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">キー</label>
+          <input class="form-input" id="new-key" placeholder="例：B♭" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">メモ（AI採点に活用）</label>
+        <input class="form-input" id="new-memo" placeholder="例：高音部分が課題" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">歌詞</label>
+        <textarea class="form-input form-input-lyrics" id="new-lyrics" placeholder="歌詞を貼り付け（任意）"></textarea>
+      </div>
+      <div class="row" style="margin-top:16px;">
+        <button class="btn btn-teal" onclick="saveNewSong()">保存</button>
+        <button class="btn btn-secondary" onclick="closeAddSong()">キャンセル</button>
+      </div>
+    </div>
+  </div>
 
   <nav class="tabs">
     <button class="tab-btn active" onclick="switchTab('pitch')">
@@ -790,23 +946,7 @@
   <div id="panel-lyrics" class="panel">
     <div class="card">
       <div class="card-title">📝 歌詞入力</div>
-      <textarea class="lyrics-input" id="lyrics-input">今にも壊れそうな ヘコたれた心に
-あなたは 触れてくれた
-上手くやれなくったって いいんだよ
-そのまま 生きていきなさい 行きなさい
-
-失ったモノ達が "心"を紡いでくれるから
-千切れた手綱と絆で 愛に向かって行きなさい
-
-凍てつく朝靄 皸たその手で
-僕を 摩ってくれた
-応えられなくったって いいんだよ
-分かってくれて… ありがとう ありがとう
-
-側にいてくれた 大切な愛に向かって
-行きなさい Hey Yeah
-
-そのまま 生きていきなさい 行きなさい</textarea>
+      <textarea class="lyrics-input" id="lyrics-input" placeholder="左上の「曲を追加」から歌詞を登録してください"></textarea>
       <div class="row gap-top">
         <button class="btn btn-teal" onclick="startLyrics()">▶ 練習スタート</button>
         <button class="btn btn-secondary" onclick="resetLyrics()">リセット</button>
@@ -853,7 +993,7 @@
         <!-- JS creates bars -->
       </div>
 
-      <textarea class="singing-note" id="song-info">ファンファーレ / 玉置浩二（2025年）TBS日曜劇場『ザ・ロイヤルファミリー』主題歌　Key:D BPM:150</textarea>
+      <textarea class="singing-note" id="song-info" placeholder="曲名・練習メモ"></textarea>
 
       <div class="row">
         <button class="btn btn-primary" id="btn-rec-start" onclick="startRecording()">🎤 録音開始</button>
@@ -911,8 +1051,179 @@
 
 <script>
 // ===========================
-// GLOBAL STATE
+// SONG DATABASE
 // ===========================
+const DEFAULT_SONGS = [
+  {
+    id: 'fanfare',
+    title: 'ファンファーレ',
+    artist: '玉置浩二',
+    year: '2025',
+    bpm: 150,
+    key: 'D',
+    memo: 'TBS日曜劇場『ザ・ロイヤルファミリー』主題歌。BPM150の疾走感、Hey/Yeahフェイクが特徴。',
+    lyrics: `今にも壊れそうな　ヘコたれた心に
+あなたは　触れてくれた
+上手くやれなくったって　いいんだよ
+そのまま　生きていきなさい
+行きなさい
+
+失ったモノ達が　"心"を紡いでくれるから
+千切れた手綱と絆で
+愛に向かって行きなさい
+
+凍てつく朝靄　靫たその手で
+僕を　摩ってくれた
+応えられなくったって　いいんだよ
+分かってくれてるから
+行きなさい
+
+会いたい人がいる　溢れそうな涙が
+千切れた手綱と絆を
+結いつけて　守っているから
+
+側に居てくれた　大切な
+愛に向かって行きなさい
+行きなさい`,
+    aiPrompt: `「ファンファーレ」（玉置浩二、2025年）の特徴：
+- BPM150の疾走感（馬が駆けるイメージ）
+- キー：D（Capo3）
+- Hey/Yeah/Ahのフェイクのライブ感
+- 「そのまま生きていきなさい」の柔らかい語りかけ
+- 田園の精神的続編ともいえる応援歌`
+  },
+  {
+    id: 'den-en',
+    title: '田園',
+    artist: '玉置浩二',
+    year: '1993',
+    bpm: 92,
+    key: 'B♭',
+    memo: '代表曲。サビの力強い発声とビブラートが鍵。',
+    lyrics: `（歌詞を貼り付けてください）`,
+    aiPrompt: `「田園」（玉置浩二、1993年）の特徴：
+- キー：B♭（男性には高め）
+- サビの「ドンドンドンドン」の力強い発声
+- 「泣きなさい 笑いなさい」の柔らかいビブラート
+- 語りかけるような表現力
+- ロングトーンの息の安定感`
+  }
+];
+
+let songs = [];
+let currentSongId = 'fanfare';
+
+function loadSongs() {
+  const saved = localStorage.getItem('tamaki_songs');
+  if (saved) {
+    songs = JSON.parse(saved);
+    // デフォルト曲のlyrics更新（ファンファーレ）
+    const ff = songs.find(s => s.id === 'fanfare');
+    if (ff && ff.lyrics.includes('（歌詞を貼り付け')) {
+      ff.lyrics = DEFAULT_SONGS[0].lyrics;
+      saveSongs();
+    }
+  } else {
+    songs = JSON.parse(JSON.stringify(DEFAULT_SONGS));
+    saveSongs();
+  }
+}
+
+function saveSongs() {
+  localStorage.setItem('tamaki_songs', JSON.stringify(songs));
+}
+
+function renderSongSelect() {
+  const sel = document.getElementById('song-select');
+  sel.innerHTML = songs.map(s =>
+    `<option value="${s.id}" ${s.id === currentSongId ? 'selected' : ''}>${s.title}（${s.year || s.artist}）</option>`
+  ).join('');
+}
+
+function selectSong(id) {
+  currentSongId = id;
+  const song = songs.find(s => s.id === id);
+  if (!song) return;
+  // 歌詞
+  document.getElementById('lyrics-input').value = song.lyrics || '';
+  // song-info
+  document.getElementById('song-info').value =
+    `${song.title} / ${song.artist}（${song.year || ''}）Key:${song.key || '--'} BPM:${song.bpm || '--'}　${song.memo || ''}`;
+  // BPM
+  if (song.bpm) {
+    bpm = song.bpm;
+    document.getElementById('bpm-slider').value = bpm;
+    document.getElementById('bpm-display').textContent = bpm;
+    if (metronomeActive) { stopMetronome(); startMetronome(); }
+  }
+  // meta
+  document.getElementById('song-meta-display').innerHTML =
+    `<span>🎵 <strong>${song.title}</strong></span>` +
+    (song.bpm ? `<span>BPM: <strong>${song.bpm}</strong></span>` : '') +
+    (song.key ? `<span>Key: <strong>${song.key}</strong></span>` : '') +
+    (song.year ? `<span>${song.year}年</span>` : '');
+  // reset lyrics practice
+  resetLyrics();
+}
+
+function openAddSong() {
+  document.getElementById('modal-add').classList.add('open');
+  document.getElementById('new-title').focus();
+}
+
+function closeAddSong() {
+  document.getElementById('modal-add').classList.remove('open');
+  ['new-title','new-artist','new-bpm','new-key','new-memo','new-lyrics'].forEach(id => {
+    document.getElementById(id).value = id === 'new-artist' ? '玉置浩二' : '';
+  });
+}
+
+function saveNewSong() {
+  const title = document.getElementById('new-title').value.trim();
+  if (!title) { alert('曲名を入力してください'); return; }
+  const newSong = {
+    id: 'song_' + Date.now(),
+    title,
+    artist: document.getElementById('new-artist').value.trim() || '玉置浩二',
+    year: new Date().getFullYear().toString(),
+    bpm: parseInt(document.getElementById('new-bpm').value) || null,
+    key: document.getElementById('new-key').value.trim() || null,
+    memo: document.getElementById('new-memo').value.trim() || '',
+    lyrics: document.getElementById('new-lyrics').value || '（歌詞を貼り付けてください）',
+    aiPrompt: `「${title}」（玉置浩二）の練習。${document.getElementById('new-memo').value}`
+  };
+  songs.push(newSong);
+  saveSongs();
+  currentSongId = newSong.id;
+  renderSongSelect();
+  selectSong(newSong.id);
+  closeAddSong();
+}
+
+function deleteSong() {
+  if (songs.length <= 1) { alert('最後の1曲は削除できません'); return; }
+  const song = songs.find(s => s.id === currentSongId);
+  if (!confirm(`「${song.title}」を削除しますか？`)) return;
+  songs = songs.filter(s => s.id !== currentSongId);
+  saveSongs();
+  currentSongId = songs[0].id;
+  renderSongSelect();
+  selectSong(currentSongId);
+}
+
+// Init songs on load
+document.addEventListener('DOMContentLoaded', () => {
+  loadSongs();
+  renderSongSelect();
+  selectSong(currentSongId);
+});
+
+// Close modal on overlay click
+document.getElementById && document.addEventListener('click', e => {
+  if (e.target.id === 'modal-add') closeAddSong();
+});
+
+
 let audioCtx = null;
 let analyser = null;
 let micStream = null;
@@ -1351,17 +1662,12 @@ async function getAIScore() {
   document.getElementById('btn-score').disabled = true;
 
   const songInfo = document.getElementById('song-info').value.trim();
+  const curSong = songs.find(s => s.id === currentSongId) || {};
 
-  const prompt = `あなたはプロのボイストレーナーです。ユーザーが玉置浩二の「ファンファーレ」（2025年、TBS日曜劇場『ザ・ロイヤルファミリー』主題歌）を練習しました。
+  const prompt = `あなたはプロのボイストレーナーです。ユーザーが「${curSong.title || ''}」を練習しました。
 ${songInfo ? `練習メモ: ${songInfo}` : ''}
 
-「ファンファーレ」の特徴：
-- BPM150の疾走感あるテンポ（馬が駆けるようなリズム感が重要）
-- キー：D（カポ3）。男声には比較的歌いやすいが高音も出てくる
-- 「Hey」「Yeah」「Ah」などのフェイク・合いの手が多く、ライブ感・即興性が重要
-- 「そのまま生きていきなさい」「行きなさい」の優しく語りかける柔らかいトーン
-- 田園と並ぶ応援歌で、言葉を届けるような表現力が鍵
-- 編曲：トオミヨウ。疾走感あるバンドサウンドに乗る歌い方
+${curSong.aiPrompt ? '曲の特徴：\n' + curSong.aiPrompt : ''}
 
 以下の観点で採点と詳細なフィードバックをしてください。必ずJSONのみで返してください。
 
@@ -1372,7 +1678,7 @@ ${songInfo ? `練習メモ: ${songInfo}` : ''}
   "expression": 数値(0-100),
   "breath": 数値(0-100),
   "grade": "S/A/B/C/D のいずれか",
-  "comment": "日本語で250字程度のフィードバック。ファンファーレ特有の①疾走感・リズム感、②フェイクの自然さ、③語りかける表現力について具体的にコメント。改善のための練習法も含める"
+  "comment": "日本語で250字程度のフィードバック。この曲の特徴を踏まえた①良かった点、②改善点、③具体的な練習法を含める"
 }
 
 注意：実際の音声解析はできないため、励ましと建設的なアドバイスとして、バランスよくランダムな採点を行ってください。`;
