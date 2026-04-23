@@ -1381,14 +1381,16 @@ function loadSongs() {
   const saved = localStorage.getItem('tamaki_songs');
   if (saved) {
     songs = JSON.parse(saved);
-    // ファンファーレの歌詞更新
-    const ff = songs.find(s => s.id === 'fanfare');
-    if (ff && ff.lyrics.includes('（歌詞を貼り付け')) {
-      ff.lyrics = DEFAULT_SONGS[0].lyrics;
-    }
-    // 新しいデフォルト曲をマージ（未登録のIDのみ追加）
+    // デフォルト曲は常に最新のlyrics・aiPromptで上書き
     DEFAULT_SONGS.forEach(def => {
-      if (!songs.find(s => s.id === def.id)) {
+      const existing = songs.find(s => s.id === def.id);
+      if (existing) {
+        existing.lyrics = def.lyrics;
+        existing.aiPrompt = def.aiPrompt;
+        existing.bpm = def.bpm;
+        existing.key = def.key;
+        existing.memo = def.memo;
+      } else {
         songs.push(JSON.parse(JSON.stringify(def)));
       }
     });
